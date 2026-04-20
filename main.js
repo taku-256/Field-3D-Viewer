@@ -1,0 +1,95 @@
+import * as THREE from "three/webgpu";
+import { createRotorBox, updateOrientation } from "./rotor.js";
+import { createViewerBox } from "./viewer.js";
+
+window.addEventListener("DOMContentLoaded", () => {
+    const { rotor_renderer, rotor_scene, rotor_camera } = createRotorBox(tick);
+    const {
+        renderer,
+        scene,
+        camera,
+        canvas,
+        getSize,
+        setSize,
+        look_x: initial_look_x,
+        look_y: initial_look_y,
+        distance: initial_distance,
+    } = createViewerBox(tick);
+
+    let look_x = initial_look_x;
+    let look_y = initial_look_y;
+    let distance = initial_distance;
+
+    function tick() {
+        updateOrientation(rotor_camera);
+        const { width, height } = getSize();
+        setSize(window.innerWidth, window.innerHeight - 150);
+        renderer.setSize(window.innerWidth, window.innerHeight - 150);
+        renderer.setPixelRatio(devicePixelRatio);
+        camera.aspect = window.innerWidth / (window.innerHeight - 150);
+        camera.updateProjectionMatrix();
+
+        rotor_renderer.render(rotor_scene, rotor_camera);
+
+        const direction = new THREE.Vector3(0, 0, 1);
+        direction.applyQuaternion(rotor_camera.quaternion);
+        direction.normalize();
+
+        camera.position.set(
+            look_x + direction.x * distance,
+            direction.y * distance,
+            look_y + direction.z * distance,
+        );
+        camera.quaternion.copy(rotor_camera.quaternion);
+
+        renderer.render(scene, camera);
+        const orientationText = document.querySelector("#odom");
+        orientationText.textContent = `{x: ${look_x.toFixed(0)}, y: ${look_y.toFixed(0)}}, distance: ${distance.toFixed(0)}`;
+    }
+
+    let isDragging = false;
+    let lastX = 0;
+    let lastY = 0;
+    const sensitivity = 1.0;
+
+    canvas.addEventListener("pointerdown", (e) => {
+        isDragging = true;
+        lastX = e.clientX;
+        lastY = e.clientY;
+    });
+
+    canvas.addEventListener("pointermove", (e) => {
+        if (!isDragging) return;
+        const dx = e.clientX - lastX;
+        const dy = e.clientY - lastY;
+        lastX = e.clientX;
+        lastY = e.clientY;
+        look_x -=
+            dx * Math.cos(-rotor_camera.rotation.z) * sensitivity -
+            dy * Math.sin(-rotor_camera.rotation.z) * sensitivity;
+        look_y -=
+            dx * Math.sin(-rotor_camera.rotation.z) * sensitivity +
+            dy * Math.cos(-rotor_camera.rotation.z) * sensitivity;
+    });
+
+    canvas.addEventListener("pointerup", () => {
+        isDragging = false;
+    });
+
+    canvas.addEventListener("pointerleave", () => {
+        isDragging = false;
+    });
+
+    canvas.addEventListener(
+        "wheel",
+        (e) => {
+            e.preventDefault();
+            const zoomSpeed = 0.002;
+            distance *= 1 + e.deltaY * zoomSpeed;
+            const min = 10;
+            const max = 5000;
+            distance = Math.min(Math.max(distance, min), max);
+        },
+        { passive: false },
+    );
+});
