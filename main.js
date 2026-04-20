@@ -60,16 +60,21 @@ window.addEventListener("DOMContentLoaded", () => {
 
     canvas.addEventListener("pointermove", (e) => {
         if (!isDragging) return;
+        const euler = new THREE.Euler().setFromQuaternion(
+            rotor_camera.quaternion,
+            "YXZ",
+        );
+
         const dx = e.clientX - lastX;
         const dy = e.clientY - lastY;
         lastX = e.clientX;
         lastY = e.clientY;
         look_x -=
-            dx * Math.cos(-rotor_camera.rotation.z) * sensitivity -
-            dy * Math.sin(-rotor_camera.rotation.z) * sensitivity;
+            dx * Math.cos(-euler.y) * sensitivity -
+            dy * Math.sin(-euler.y) * sensitivity;
         look_y -=
-            dx * Math.sin(-rotor_camera.rotation.z) * sensitivity +
-            dy * Math.cos(-rotor_camera.rotation.z) * sensitivity;
+            dx * Math.sin(-euler.y) * sensitivity +
+            dy * Math.cos(-euler.y) * sensitivity;
     });
 
     canvas.addEventListener("pointerup", () => {
