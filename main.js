@@ -70,11 +70,15 @@ window.addEventListener("DOMContentLoaded", () => {
         lastX = e.clientX;
         lastY = e.clientY;
         look_x -=
-            dx * Math.cos(-euler.y) * sensitivity -
-            dy * Math.sin(-euler.y) * sensitivity;
+            ((dx * Math.cos(-euler.y) * sensitivity -
+                dy * Math.sin(-euler.y) * sensitivity) *
+                distance) /
+            1500;
         look_y -=
-            dx * Math.sin(-euler.y) * sensitivity +
-            dy * Math.cos(-euler.y) * sensitivity;
+            ((dx * Math.sin(-euler.y) * sensitivity +
+                dy * Math.cos(-euler.y) * sensitivity) *
+                distance) /
+            1500;
     });
 
     canvas.addEventListener("pointerup", () => {
@@ -91,8 +95,8 @@ window.addEventListener("DOMContentLoaded", () => {
             e.preventDefault();
             const zoomSpeed = 0.002;
             distance *= 1 + e.deltaY * zoomSpeed;
-            const min = 10;
-            const max = 5000;
+            const min = 1;
+            const max = 10000;
             distance = Math.min(Math.max(distance, min), max);
         },
         { passive: false },
