@@ -1,18 +1,8 @@
 import * as THREE from "three/webgpu";
 import { SceneManager } from "./scene-manager.js";
+import { objects, DEFAULT_SETTINGS } from "./default-field.js";
 
-/**
- * JSON の presetColors は文字列 "0xRRGGBB" 形式なので数値に変換する
- */
-function parseColorTable(presetColors) {
-    const result = {};
-    for (const [key, value] of Object.entries(presetColors)) {
-        result[key] = typeof value === "string" ? Number(value) : value;
-    }
-    return result;
-}
-
-export async function createViewerBox(onTick) {
+export function createViewerBox(onTick) {
     let width = window.innerWidth;
     let height = window.innerHeight - 150;
     const canvas = document.querySelector("#myCanvas");
@@ -25,27 +15,20 @@ export async function createViewerBox(onTick) {
     renderer.setAnimationLoop(onTick);
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x000000);
+    scene.background = new THREE.Color(DEFAULT_SETTINGS.backgroundColor);
 
     const camera = new THREE.PerspectiveCamera(45, width / height, 1, 10000);
     camera.position.set(0, 0, 1000);
 
-    // デフォルトフィールドJSONの読み込み
-    const response = await fetch("./default-field.json");
-    const defaultField = await response.json();
+    const sceneManager = new SceneManager(scene, DEFAULT_SETTINGS);
 
-    // SceneManager の初期化とデフォルトフィールドのロード
-    const sceneManager = new SceneManager(scene, {
-        scale: defaultField.settings.scale,
-        floorTall: defaultField.settings.floorTall,
-        backgroundColor:
-            typeof defaultField.settings.backgroundColor === "string"
-                ? parseInt(defaultField.settings.backgroundColor, 16)
-                : defaultField.settings.backgroundColor,
-        presetColors: parseColorTable(defaultField.settings.presetColors),
-    });
-
-    sceneManager.importScene(defaultField);
+    for (const obj of objects) {
+        if (obj.type === "floor") {
+            sceneManager.addFloor(obj.x, obj.y, obj.z, obj.width, obj.height, obj.color, obj.tall);
+        } else if (obj.type === "object") {
+            sceneManager.addObject(obj.x, obj.y, obj.z, obj.bottomRadius, obj.tall, obj.color, obj.topRadius);
+        }
+    }
 
     return {
         renderer,

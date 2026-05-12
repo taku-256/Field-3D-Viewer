@@ -3,3 +3,99 @@ html {
 	margin: 0px;
 	padding: 0px;
 }
+
+.checkbox {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    width: 48px;
+    height: 48px;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 30;
+}
+
+.CADopenButton {
+    position: absolute;
+    top: 126px;
+    left: 14px;
+    width: 48px;
+    height: 48px;
+    z-index: 20;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.toggleLabel {
+    display: block;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    position: relative;
+}
+
+.bar {
+    position: absolute;
+    left: 12px;
+    width: 24px;
+    height: 4px;
+    background: #111;
+    border-radius: 2px;
+}
+
+.bar_1 {
+    top: 16px;
+    transform: rotate(30deg);
+}
+
+.bar_2 {
+    top: 28px;
+    transform: rotate(-30deg);
+}
+
+.checkbox:checked + .CADopenButton .bar_1 {
+    transform: rotate(45deg);
+    top: 22px;
+}
+
+.checkbox:checked + .CADopenButton .bar_2 {
+    transform: rotate(-45deg);
+    top: 22px;
+}
+
+.checkbox:checked + .CADopenButton {
+    left: calc(33.333vw + 10px);
+}
+
+#cadPanel {
+    display: none;
+    position: absolute;
+    top: 100px;
+    left: 0;
+    width: 33.333vw;
+    height: calc(100vh - 150px);
+    background: white;
+    z-index: 10;
+    padding: 24px;
+    box-sizing: border-box;
+	border:1px solid black;
+
+}
+
+.checkbox:checked ~ #cadPanel {
+    display: block;
+}
+
+.panelContent {
+    max-width: 600px;
+    margin: 0 auto;
+    color: #111;
+}
+
+.panelContent h2 {
+    margin-top: 0;
+}

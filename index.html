@@ -17,18 +17,22 @@
     </head>
 
     <body>
-        <h1>Field 3D Viewer</h1>
-        <canvas id="myCanvas"></canvas>
+        <h1 style="position: absolute;left: 10px">Field 3D Viewer</h1>
+        <canvas id="myCanvas" style="position:absolute;top:100px"></canvas>
         <canvas
             id="rotor"
             style="
                 position: absolute;
-                top: 0;
+                top: 100px;
                 right: 0;
                 padding: 0px;
                 margin: 0px;
             "
         ></canvas>
+        <!-- <div id="shareArea" style="position: absolute; left: 10px; bottom: 20px; color: whitesmoke; font-family: Arial, sans-serif;">
+            <button id="shareButton" type="button">copy</button>
+            <span id="shareStatus" style="margin-left: 12px;"></span>
+        </div> -->
         <center>
             <a style="position: absolute; bottom: 20px">footer</a>
         </center>
@@ -54,5 +58,17 @@
                 bottom: 80px;
             "
         ></div>
+        <input class="checkbox" type="checkbox" name="open_close_button" id="open_close_button" />
+        <div class="CADopenButton">
+            <label for="open_close_button" class="toggleLabel">
+                <div class="bar bar_1"></div>
+                <div class="bar bar_2"></div>
+            </label>
+        </div>
+        <div id="cadPanel">
+            <div class="panelContent">
+                <h2>CAD操作画面(仮置き)</h2>
+            </div>
+        </div>
     </body>
 </html>

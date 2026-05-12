@@ -2,8 +2,7 @@ import * as THREE from "three/webgpu";
 import { createRotorBox, updateOrientation } from "./rotor.js";
 import { createViewerBox } from "./viewer.js";
 
-window.addEventListener("DOMContentLoaded", async () => {
-    let ready = false;
+window.addEventListener("DOMContentLoaded", () => {
     const { rotor_renderer, rotor_scene, rotor_camera } = createRotorBox(tick);
     const {
         renderer,
@@ -16,15 +15,13 @@ window.addEventListener("DOMContentLoaded", async () => {
         look_x: initial_look_x,
         look_y: initial_look_y,
         distance: initial_distance,
-    } = await createViewerBox(tick);
+    } = createViewerBox(tick);
 
     let look_x = initial_look_x;
     let look_y = initial_look_y;
     let distance = initial_distance;
-    ready = true;
 
     function tick() {
-        if (!ready) return;
         updateOrientation(rotor_camera);
         const { width, height } = getSize();
         setSize(window.innerWidth, window.innerHeight - 150);
