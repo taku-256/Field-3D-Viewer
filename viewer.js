@@ -1,4 +1,4 @@
-import * as THREE from "three/webgpu";
+import * as THREE from "three";
 import { SceneManager } from "./scene-manager.js";
 import { objects, DEFAULT_SETTINGS } from "./default-field.js";
 
@@ -9,7 +9,7 @@ export function createViewerBox(onTick) {
     let look_x = 0;
     let look_y = 0;
     let distance = 1000;
-    const renderer = new THREE.WebGPURenderer({ canvas, forceWebGL: true });
+    const renderer = new THREE.WebGLRenderer({ canvas });
     renderer.setSize(width, height);
     renderer.setPixelRatio(devicePixelRatio);
     renderer.setAnimationLoop(onTick);

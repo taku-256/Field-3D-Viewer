@@ -1,4 +1,4 @@
-import * as THREE from "three/webgpu";
+import * as THREE from "three";
 import { createRotorBox, updateOrientation } from "./rotor.js";
 import { createViewerBox } from "./viewer.js";
 import { CadPanel } from "./cad-panel.js";

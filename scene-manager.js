@@ -1,4 +1,4 @@
-import * as THREE from "three/webgpu";
+import * as THREE from "three";
 
 export const PRESET_COLORS = {
     red: 0xd8453f,
