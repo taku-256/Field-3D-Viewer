@@ -2,14 +2,14 @@ import * as THREE from "three/webgpu";
 
 export const PRESET_COLORS = {
     red: 0xd8453f,
-    blue: 0x04438c,
-    field: 0xd7cda1,
-    white: 0xffffff,
-    gray: 0x808080,
     red_light: 0xf2d5ca,
     red_mid: 0xf1b6b2,
+    blue: 0x04438c,
     blue_light: 0xd0e2e5,
     blue_mid: 0xaacce1,
+    white: 0xffffff,
+    gray: 0x808080,
+    field: 0xd7cda1,
 };
 
 export class SceneManager {
