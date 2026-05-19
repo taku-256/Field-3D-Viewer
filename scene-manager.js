@@ -163,6 +163,13 @@ export class SceneManager {
             .filter(Boolean);
     }
 
+    addFromData(data) {
+        if (data.type === "floor") {
+            return this.addFloor(data.x, data.y, data.z, data.width, data.height, data.color, data.tall);
+        }
+        return this.addObject(data.x, data.y, data.z, data.bottomRadius, data.tall, data.color, data.topRadius);
+    }
+
     get count() {
         return this._entries.filter(Boolean).length;
     }
