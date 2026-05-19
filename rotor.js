@@ -1,16 +1,16 @@
 import * as THREE from "three/webgpu";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
-export function createRotorBox(onTick) {
+export function createRotorBox() {
     const rotor_size = 256;
     const rotor_canvas = document.querySelector("#rotor");
     const rotor_renderer = new THREE.WebGPURenderer({
         canvas: rotor_canvas,
         alpha: true,
+        forceWebGL: true,
     });
     rotor_renderer.setSize(rotor_size, rotor_size);
     rotor_renderer.setPixelRatio(devicePixelRatio);
-    rotor_renderer.setAnimationLoop(onTick);
 
     const rotor_scene = new THREE.Scene();
     rotor_renderer.setClearColor(0x0000000, 0);

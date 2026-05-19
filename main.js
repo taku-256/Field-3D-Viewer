@@ -4,7 +4,7 @@ import { createViewerBox } from "./viewer.js";
 import { CadPanel } from "./cad-panel.js";
 
 window.addEventListener("DOMContentLoaded", () => {
-    const { rotor_renderer, rotor_scene, rotor_camera } = createRotorBox(tick);
+    const { rotor_renderer, rotor_scene, rotor_camera } = createRotorBox();
     const {
         renderer,
         scene,
@@ -24,6 +24,9 @@ window.addEventListener("DOMContentLoaded", () => {
 
     const cadPanel = new CadPanel(sceneManager);
 
+    const odomEl = document.querySelector("#odom");
+    let prevW = 0;
+    let prevH = 0;
     let lastTime = performance.now();
 
     function tick() {
@@ -34,12 +37,18 @@ window.addEventListener("DOMContentLoaded", () => {
         cadPanel.tick(dt);
 
         updateOrientation(rotor_camera);
-        const { width, height } = getSize();
-        setSize(window.innerWidth, window.innerHeight - 150);
-        renderer.setSize(window.innerWidth, window.innerHeight - 150);
-        renderer.setPixelRatio(devicePixelRatio);
-        camera.aspect = window.innerWidth / (window.innerHeight - 150);
-        camera.updateProjectionMatrix();
+
+        const w = window.innerWidth;
+        const h = window.innerHeight - 150;
+        if (w !== prevW || h !== prevH) {
+            prevW = w;
+            prevH = h;
+            setSize(w, h);
+            renderer.setSize(w, h);
+            renderer.setPixelRatio(devicePixelRatio);
+            camera.aspect = w / h;
+            camera.updateProjectionMatrix();
+        }
 
         rotor_renderer.render(rotor_scene, rotor_camera);
 
@@ -55,8 +64,7 @@ window.addEventListener("DOMContentLoaded", () => {
         camera.quaternion.copy(rotor_camera.quaternion);
 
         renderer.render(scene, camera);
-        const orientationText = document.querySelector("#odom");
-        orientationText.textContent = `{x: ${look_x.toFixed(0)}, y: ${look_y.toFixed(0)}}, distance: ${distance.toFixed(0)}`;
+        odomEl.textContent = `{x: ${look_x.toFixed(0)}, y: ${look_y.toFixed(0)}}, distance: ${distance.toFixed(0)}`;
     }
 
     let isDragging = false;

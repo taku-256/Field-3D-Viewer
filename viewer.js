@@ -9,7 +9,7 @@ export function createViewerBox(onTick) {
     let look_x = 0;
     let look_y = 0;
     let distance = 1000;
-    const renderer = new THREE.WebGPURenderer({ canvas });
+    const renderer = new THREE.WebGPURenderer({ canvas, forceWebGL: true });
     renderer.setSize(width, height);
     renderer.setPixelRatio(devicePixelRatio);
     renderer.setAnimationLoop(onTick);
