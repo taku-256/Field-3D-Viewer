@@ -47,3 +47,5 @@ export const objects = [
     { type: "object", x: 8150, y: 8300, z: 0, bottomRadius: 800, tall: 50, color: "blue_light" },
     { type: "object", x: 8150, y: 8300, z: 5, bottomRadius: 1700, tall: 0, color: "blue_mid" },
 ];
+
+// export const objects = [];

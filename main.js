@@ -1,6 +1,7 @@
 import * as THREE from "three/webgpu";
 import { createRotorBox, updateOrientation } from "./rotor.js";
 import { createViewerBox } from "./viewer.js";
+import { CadPanel } from "./cad-panel.js";
 
 window.addEventListener("DOMContentLoaded", () => {
     const { rotor_renderer, rotor_scene, rotor_camera } = createRotorBox(tick);
@@ -21,7 +22,17 @@ window.addEventListener("DOMContentLoaded", () => {
     let look_y = initial_look_y;
     let distance = initial_distance;
 
+    const cadPanel = new CadPanel(sceneManager);
+
+    let lastTime = performance.now();
+
     function tick() {
+        const now = performance.now();
+        const dt = (now - lastTime) / 1000;
+        lastTime = now;
+
+        cadPanel.tick(dt);
+
         updateOrientation(rotor_camera);
         const { width, height } = getSize();
         setSize(window.innerWidth, window.innerHeight - 150);
