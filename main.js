@@ -6,6 +6,17 @@ import { ShareDialog } from "./share-dialog.js";
 import { encodeSceneToHash } from "./scene-serializer.js";
 
 window.addEventListener("DOMContentLoaded", () => {
+    // Confirm dialog when clicking the header link
+    const headerLink = document.getElementById("headerLink");
+    if (headerLink) {
+        headerLink.addEventListener("click", (e) => {
+            const confirmed = confirm("ページを移動すると、編集中のフィールドのデータは失われます。移動してもよろしいですか？");
+            if (!confirmed) {
+                e.preventDefault();
+            }
+        });
+    }
+
     const { rotor_renderer, rotor_scene, rotor_camera } = createRotorBox();
     const {
         renderer,
@@ -33,17 +44,17 @@ window.addEventListener("DOMContentLoaded", () => {
     // Create and append floating zoom buttons
     const zoomContainer = document.createElement("div");
     zoomContainer.className = "zoom-btn-container";
-    
+
     const zoomInBtn = document.createElement("button");
     zoomInBtn.className = "zoom-btn zoom-in";
     zoomInBtn.innerHTML = "+";
     zoomInBtn.setAttribute("aria-label", "Zoom In");
-    
+
     const zoomOutBtn = document.createElement("button");
     zoomOutBtn.className = "zoom-btn zoom-out";
     zoomOutBtn.innerHTML = "−";
     zoomOutBtn.setAttribute("aria-label", "Zoom Out");
-    
+
     zoomContainer.appendChild(zoomInBtn);
     zoomContainer.appendChild(zoomOutBtn);
     document.body.appendChild(zoomContainer);
