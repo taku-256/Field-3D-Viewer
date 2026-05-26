@@ -325,3 +325,141 @@ canvas {
     transform: translateY(-1px);
 }
 .cad-save-btn:active { transform: translateY(0); }
+
+/* ── Share Button ── */
+.share-btn {
+    position: absolute;
+    bottom: 60px;
+    left: 14px;
+    width: 48px;
+    height: 48px;
+    border: none;
+    border-radius: 10px;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 20;
+    color: #333;
+    transition: all 0.15s ease;
+}
+.share-btn:hover {
+    background: #f0f0f6;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+    transform: translateY(-1px);
+}
+.share-btn:active { transform: translateY(0); }
+
+/* ── Share Overlay ── */
+.share-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: share-fade-in 0.15s ease;
+}
+@keyframes share-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* ── Share Dialog ── */
+.share-dialog {
+    background: #fff;
+    border-radius: 16px;
+    padding: 28px 32px;
+    min-width: 320px;
+    max-width: 90vw;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+    animation: share-slide-up 0.2s ease;
+}
+@keyframes share-slide-up {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.share-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+.share-title {
+    margin: 0;
+    font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: #1a1a2e;
+}
+.share-close-btn {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: #f0f0f6;
+    border-radius: 8px;
+    font-size: 20px;
+    color: #666;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+}
+.share-close-btn:hover { background: #dddde8; }
+
+.share-qr {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+.share-qr canvas,
+.share-qr img {
+    border-radius: 8px;
+}
+
+.share-url-row {
+    display: flex;
+    gap: 8px;
+}
+.share-url-input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #d0d0de;
+    border-radius: 8px;
+    font-family: 'Inter', 'Segoe UI', monospace;
+    font-size: 12px;
+    color: #1a1a2e;
+    background: #fafafe;
+    outline: none;
+    min-width: 0;
+}
+.share-url-input:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+}
+
+.share-copy-btn {
+    padding: 8px 18px;
+    border: none;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #6366f1, #818cf8);
+    color: #fff;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s ease;
+    box-shadow: 0 2px 8px rgba(99,102,241,0.25);
+}
+.share-copy-btn:hover {
+    box-shadow: 0 4px 14px rgba(99,102,241,0.4);
+    transform: translateY(-1px);
+}
+.share-copy-btn:active { transform: translateY(0); }
+

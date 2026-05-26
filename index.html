@@ -8,11 +8,13 @@
             {
                 "imports": {
                     "three": "https://cdn.jsdelivr.net/npm/three@0.182.0/build/three.module.js",
-                    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.182.0/examples/jsm/"
+                    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.182.0/examples/jsm/",
+                    "pako": "https://cdn.jsdelivr.net/npm/pako@2.1.0/+esm"
                 }
             }
         </script>
         <link rel="stylesheet" href="style.css" />
+        <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
         <script type="module" src="main.js"></script>
     </head>
 
@@ -29,10 +31,6 @@
                 margin: 0px;
             "
         ></canvas>
-        <!-- <div id="shareArea" style="position: absolute; left: 10px; bottom: 20px; color: whitesmoke; font-family: Arial, sans-serif;">
-            <button id="shareButton" type="button">copy</button>
-            <span id="shareStatus" style="margin-left: 12px;"></span>
-        </div> -->
         <a style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);">&copy; 2026 taku-256</a>
         <div
             id="cameraOrientation"

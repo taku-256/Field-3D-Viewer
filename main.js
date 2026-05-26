@@ -2,6 +2,8 @@ import * as THREE from "three";
 import { createRotorBox, updateOrientation } from "./rotor.js";
 import { createViewerBox } from "./viewer.js";
 import { CadPanel } from "./cad-panel.js";
+import { ShareDialog } from "./share-dialog.js";
+import { encodeSceneToHash } from "./scene-serializer.js";
 
 window.addEventListener("DOMContentLoaded", () => {
     const { rotor_renderer, rotor_scene, rotor_camera } = createRotorBox();
@@ -23,6 +25,18 @@ window.addEventListener("DOMContentLoaded", () => {
     let distance = initial_distance;
 
     const cadPanel = new CadPanel(sceneManager);
+    const shareDialog = new ShareDialog(sceneManager);
+
+    function updateHash() {
+        try {
+            const hash = encodeSceneToHash(sceneManager.exportScene().objects);
+            history.replaceState(null, "", "#" + hash);
+        } catch (err) {
+            console.error("Failed to update hash:", err);
+        }
+    }
+
+    sceneManager.onChange = updateHash;
 
     const odomEl = document.querySelector("#odom");
     let prevW = 0;

@@ -23,6 +23,7 @@ export class SceneManager {
         };
 
         this._entries = [];
+        this.onChange = null;
     }
 
     static _parseColorValue(value) {
@@ -429,6 +430,7 @@ export class SceneManager {
 
         this._rebuildFloors();
 
+        this.onChange?.();
         return this._entries.length - 1;
     }
 
@@ -439,6 +441,7 @@ export class SceneManager {
         }
         const mesh = this._createObjectMesh(data);
         this._entries.push({ data, mesh });
+        this.onChange?.();
         return this._entries.length - 1;
     }
 
@@ -449,6 +452,7 @@ export class SceneManager {
         }
         const mesh = this._createSlopeMesh(data);
         this._entries.push({ data, mesh });
+        this.onChange?.();
         return this._entries.length - 1;
     }
 
@@ -469,6 +473,7 @@ export class SceneManager {
 
             this._rebuildFloors();
 
+            this.onChange?.();
             return true;
         }
 
@@ -477,6 +482,7 @@ export class SceneManager {
 
         this._entries[index] = null;
 
+        this.onChange?.();
         return true;
     }
 
@@ -490,6 +496,7 @@ export class SceneManager {
 
             this._rebuildFloors();
 
+            this.onChange?.();
             return;
         }
 
@@ -503,6 +510,7 @@ export class SceneManager {
         } else {
             entry.mesh = this._createObjectMesh(entry.data);
         }
+        this.onChange?.();
     }
 
     get(index) {
@@ -606,6 +614,7 @@ export class SceneManager {
                 );
             }
         }
+        this.onChange?.();
     }
 
     clear() {
@@ -616,5 +625,6 @@ export class SceneManager {
             }
         }
         this._entries = [];
+        this.onChange?.();
     }
 }
