@@ -56,6 +56,24 @@ export class SceneManager {
         return 0xffffff;
     }
 
+    _addEdges(mesh, thresholdAngle = 1) {
+        const edgeGeo = new THREE.EdgesGeometry(mesh.geometry, thresholdAngle);
+        const edgeMat = new THREE.LineBasicMaterial({ color: 0x222222, linewidth: 1 });
+        const edges = new THREE.LineSegments(edgeGeo, edgeMat);
+        mesh.add(edges);
+    }
+
+    _disposeMesh(mesh) {
+        // Dispose edge children first
+        for (const child of [...mesh.children]) {
+            if (child.geometry) child.geometry.dispose();
+            if (child.material) child.material.dispose();
+            mesh.remove(child);
+        }
+        mesh.geometry.dispose();
+        mesh.material.dispose();
+    }
+
     _createFloorMesh(data) {
         const s = this.settings.scale;
         const tall = data.tall ?? this.settings.floorTall;
@@ -74,6 +92,7 @@ export class SceneManager {
             (data.z + tall / 2) * s,
             (data.y + data.height / 2) * s,
         );
+        this._addEdges(mesh);
         this.threeScene.add(mesh);
         return mesh;
     }
@@ -96,6 +115,75 @@ export class SceneManager {
             (data.z + data.tall / 2) * s,
             data.y * s,
         );
+        this._addEdges(mesh);
+        this.threeScene.add(mesh);
+        return mesh;
+    }
+
+    _createSlopeMesh(data) {
+        const s = this.settings.scale;
+        const w = data.width * s;
+        const h = data.height * s;
+        const t = data.tall * s;
+        const color = this._resolveColor(data.color);
+
+        // Triangular prism (wedge): right angle at the bottom-front edge.
+        // Cross-section is a right triangle: bottom-left (0,0), bottom-right (w,0), bottom-left top (0,t)
+        // Extruded along Z (depth = h)
+        const vertices = new Float32Array([
+            // Front face (triangle)
+            0, 0, 0,
+            w, 0, 0,
+            0, t, 0,
+            // Back face (triangle)
+            0, 0, h,
+            w, 0, h,
+            0, t, h,
+            // Bottom face (rectangle)
+            0, 0, 0,
+            w, 0, 0,
+            w, 0, h,
+            0, 0, h,
+            // Left face (rectangle) - vertical side
+            0, 0, 0,
+            0, t, 0,
+            0, t, h,
+            0, 0, h,
+            // Hypotenuse face (rectangle) - slope surface
+            w, 0, 0,
+            0, t, 0,
+            0, t, h,
+            w, 0, h,
+        ]);
+
+        const indices = [
+            // Front face
+            0, 1, 2,
+            // Back face
+            3, 5, 4,
+            // Bottom face
+            6, 7, 8, 6, 8, 9,
+            // Left face
+            10, 11, 12, 10, 12, 13,
+            // Hypotenuse face
+            14, 15, 16, 14, 16, 17,
+        ];
+
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+        geometry.setIndex(indices);
+        geometry.computeVertexNormals();
+
+        const mesh = new THREE.Mesh(
+            geometry,
+            new THREE.MeshBasicMaterial({ color, side: THREE.DoubleSide }),
+        );
+        mesh.position.set(
+            data.x * s,
+            data.z * s,
+            data.y * s,
+        );
+        this._addEdges(mesh, 1);
         this.threeScene.add(mesh);
         return mesh;
     }
@@ -120,14 +208,20 @@ export class SceneManager {
         return this._entries.length - 1;
     }
 
+    addSlope(x, y, z, width, height, tall, color) {
+        const data = { type: "slope", x, y, z, width, height, tall, color };
+        const mesh = this._createSlopeMesh(data);
+        this._entries.push({ data, mesh });
+        return this._entries.length - 1;
+    }
+
     remove(index) {
         if (index < 0 || index >= this._entries.length) return false;
         const entry = this._entries[index];
         if (!entry) return false;
 
         this.threeScene.remove(entry.mesh);
-        entry.mesh.geometry.dispose();
-        entry.mesh.material.dispose();
+        this._disposeMesh(entry.mesh);
         this._entries[index] = null;
         return true;
     }
@@ -138,13 +232,14 @@ export class SceneManager {
         if (!entry) return;
 
         this.threeScene.remove(entry.mesh);
-        entry.mesh.geometry.dispose();
-        entry.mesh.material.dispose();
+        this._disposeMesh(entry.mesh);
 
         Object.assign(entry.data, partialData);
 
         if (entry.data.type === "floor") {
             entry.mesh = this._createFloorMesh(entry.data);
+        } else if (entry.data.type === "slope") {
+            entry.mesh = this._createSlopeMesh(entry.data);
         } else {
             entry.mesh = this._createObjectMesh(entry.data);
         }
@@ -166,6 +261,9 @@ export class SceneManager {
     addFromData(data) {
         if (data.type === "floor") {
             return this.addFloor(data.x, data.y, data.z, data.width, data.height, data.color, data.tall);
+        }
+        if (data.type === "slope") {
+            return this.addSlope(data.x, data.y, data.z, data.width, data.height, data.tall, data.color);
         }
         return this.addObject(data.x, data.y, data.z, data.bottomRadius, data.tall, data.color, data.topRadius);
     }
@@ -225,6 +323,16 @@ export class SceneManager {
                     obj.color,
                     obj.tall,
                 );
+            } else if (obj.type === "slope") {
+                this.addSlope(
+                    obj.x,
+                    obj.y,
+                    obj.z,
+                    obj.width,
+                    obj.height,
+                    obj.tall,
+                    obj.color,
+                );
             } else if (obj.type === "object") {
                 this.addObject(
                     obj.x,
@@ -243,8 +351,7 @@ export class SceneManager {
         for (const entry of this._entries) {
             if (entry) {
                 this.threeScene.remove(entry.mesh);
-                entry.mesh.geometry.dispose();
-                entry.mesh.material.dispose();
+                this._disposeMesh(entry.mesh);
             }
         }
         this._entries = [];

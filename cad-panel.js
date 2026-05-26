@@ -109,6 +109,9 @@ export class CadPanel {
             if (tall !== undefined) data.tall = tall;
             return data;
         }
+        if (this._editType === "slope") {
+            return { ...base, width: num("cadWidth", 1000), height: num("cadHeight", 1000), tall: num("cadTall", 200) };
+        }
         const data = { ...base, bottomRadius: num("cadBottomRadius", 100), tall: num("cadTall", 100) };
         const topR = optNum("cadTopRadius");
         if (topR !== undefined) data.topRadius = topR;
@@ -120,10 +123,16 @@ export class CadPanel {
         this._removePreview();
         this._editIdx = null;
 
+        const typeLabel = { floor: "ボックス", object: "シリンダー", slope: "スロープ" };
         const items = this.sm.getAll().map(({ index, data: d }) => {
-            const label = d.type === "floor"
-                ? `Floor (${d.x}, ${d.y}) ${d.width}×${d.height}`
-                : `Object (${d.x}, ${d.y}) r=${d.bottomRadius}`;
+            let label;
+            if (d.type === "floor") {
+                label = `ボックス (${d.x}, ${d.y}) ${d.width}×${d.height}`;
+            } else if (d.type === "slope") {
+                label = `スロープ (${d.x}, ${d.y}) ${d.width}×${d.height}×${d.tall}`;
+            } else {
+                label = `シリンダー (${d.x}, ${d.y}) r=${d.bottomRadius}`;
+            }
             const colorName = typeof d.color === "string" ? d.color : `#${d.color.toString(16).padStart(6, "0")}`;
             return `<button class="cad-list-item" data-index="${index}">
                 <span class="cad-item-icon"><span class="cad-color-dot" style="background:${this._colorToCSS(d.color)}"></span></span>
@@ -174,11 +183,17 @@ export class CadPanel {
         const isCustom = data && typeof data.color === "number";
         const customVal = isCustom ? "0x" + data.color.toString(16).padStart(6, "0") : "";
 
-        const typeFields = type === "floor"
-            ? fieldRow([["幅 (Width)", "cadWidth", v("width", 1000)], ["奥行 (Height)", "cadHeight", v("height", 1000)]])
-              + fieldRow([["高さ (Tall)", "cadTall", v("tall", "")]])
-            : fieldRow([["下半径", "cadBottomRadius", v("bottomRadius", 100)], ["上半径", "cadTopRadius", v("topRadius", "")]])
+        let typeFields;
+        if (type === "floor") {
+            typeFields = fieldRow([["幅 (Width)", "cadWidth", v("width", 1000)], ["奥行 (Height)", "cadHeight", v("height", 1000)]])
+              + fieldRow([["高さ (Tall)", "cadTall", v("tall", "")]]);
+        } else if (type === "slope") {
+            typeFields = fieldRow([["幅 (Width)", "cadWidth", v("width", 1000)], ["奥行 (Height)", "cadHeight", v("height", 1000)]])
+              + fieldRow([["高さ (Tall)", "cadTall", v("tall", 200)]]);
+        } else {
+            typeFields = fieldRow([["下半径", "cadBottomRadius", v("bottomRadius", 100)], ["上半径", "cadTopRadius", v("topRadius", "")]])
               + fieldRow([["高さ (Tall)", "cadTall", v("tall", 100)]]);
+        }
 
         this._el.innerHTML = `
             <div class="cad-edit-header">
@@ -189,8 +204,9 @@ export class CadPanel {
             <div class="cad-form-scroll">
                 <label class="cad-label">タイプ</label>
                 <div class="cad-type-switch">
-                    <button class="cad-type-btn ${type === "floor" ? "active" : ""}" data-type="floor">Floor</button>
-                    <button class="cad-type-btn ${type === "object" ? "active" : ""}" data-type="object">Object</button>
+                    <button class="cad-type-btn ${type === "floor" ? "active" : ""}" data-type="floor">ボックス</button>
+                    <button class="cad-type-btn ${type === "object" ? "active" : ""}" data-type="object">シリンダー</button>
+                    <button class="cad-type-btn ${type === "slope" ? "active" : ""}" data-type="slope">スロープ</button>
                 </div>
                 ${fieldRow([["X", "cadX", v("x", 0)], ["Y", "cadY", v("y", 0)], ["Z", "cadZ", v("z", 0)]])}
                 ${typeFields}

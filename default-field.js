@@ -7,8 +7,9 @@ export const DEFAULT_SETTINGS = {
     presetColors: PRESET_COLORS,
 };
 
-// floor: { type, x, y, z, width, height, color, tall? }
-// object: { type, x, y, z, bottomRadius, tall, color, topRadius? }
+// floor (ボックス): { type, x, y, z, width, height, color, tall? }
+// object (シリンダー): { type, x, y, z, bottomRadius, tall, color, topRadius? }
+// slope (スロープ): { type, x, y, z, width, height, tall, color }
 export const objects = [
     // フィールド床
     { type: "floor", x: 0, y: 0, z: 0, width: 10800, height: 11700, color: "field" },
