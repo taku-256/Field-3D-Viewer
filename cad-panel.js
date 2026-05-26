@@ -20,7 +20,7 @@ export class CadPanel {
         this.sm = sceneManager;
         this._editIdx = null;
         this._editType = "floor";
-        this._blinkMesh = null;
+        this._blinkObject = null;
         this._blinkTime = 0;
         this._previewIdx = null;
 
@@ -46,28 +46,52 @@ export class CadPanel {
     }
 
     tick(dt = 1 / 60) {
-        if (!this._blinkMesh) return;
+        if (!this._blinkObject) return;
+
         this._blinkTime += dt;
-        this._blinkMesh.material.opacity = 0.15 + 0.85 * (0.5 + 0.5 * Math.sin(this._blinkTime * 6));
-        this._blinkMesh.material.transparent = true;
+
+        const opacity =
+            0.15 + 0.85 * (0.5 + 0.5 * Math.sin(this._blinkTime * 6));
+
+        this._blinkObject.traverse((obj) => {
+            if (!obj.isMesh) return;
+
+            obj.material.opacity = opacity;
+            obj.material.transparent = true;
+        });
     }
 
     _startBlink(index) {
         this._stopBlink();
+
         const entry = this.sm._entries[index];
-        if (!entry) return;
-        this._blinkMesh = entry.mesh;
-        this._blinkMesh.material.transparent = true;
-        this._blinkMesh.material.needsUpdate = true;
+
+        if (!entry || !entry.mesh) return;
+
+        this._blinkObject = entry.mesh;
+
+        this._blinkObject.traverse((obj) => {
+            if (!obj.isMesh) return;
+
+            obj.material.transparent = true;
+            obj.material.needsUpdate = true;
+        });
+
         this._blinkTime = 0;
     }
 
     _stopBlink() {
-        if (!this._blinkMesh) return;
-        this._blinkMesh.material.opacity = 1;
-        this._blinkMesh.material.transparent = false;
-        this._blinkMesh.material.needsUpdate = true;
-        this._blinkMesh = null;
+        if (!this._blinkObject) return;
+
+        this._blinkObject.traverse((obj) => {
+            if (!obj.isMesh) return;
+
+            obj.material.opacity = 1;
+            obj.material.transparent = false;
+            obj.material.needsUpdate = true;
+        });
+
+        this._blinkObject = null;
     }
 
     _removePreview() {
@@ -110,7 +134,7 @@ export class CadPanel {
             return data;
         }
         if (this._editType === "slope") {
-            return { ...base, width: num("cadWidth", 1000), height: num("cadHeight", 1000), tall: num("cadTall", 200) };
+            return { ...base, width: num("cadWidth", 1000), height: num("cadHeight", 1000), tall: num("cadTall", 200), rotation: num("cadRotation", 0) };
         }
         const data = { ...base, bottomRadius: num("cadBottomRadius", 100), tall: num("cadTall", 100) };
         const topR = optNum("cadTopRadius");
@@ -186,13 +210,22 @@ export class CadPanel {
         let typeFields;
         if (type === "floor") {
             typeFields = fieldRow([["幅 (Width)", "cadWidth", v("width", 1000)], ["奥行 (Height)", "cadHeight", v("height", 1000)]])
-              + fieldRow([["高さ (Tall)", "cadTall", v("tall", "")]]);
+                + fieldRow([["高さ (Tall)", "cadTall", v("tall", "")]]);
         } else if (type === "slope") {
             typeFields = fieldRow([["幅 (Width)", "cadWidth", v("width", 1000)], ["奥行 (Height)", "cadHeight", v("height", 1000)]])
-              + fieldRow([["高さ (Tall)", "cadTall", v("tall", 200)]]);
+                + fieldRow([["高さ (Tall)", "cadTall", v("tall", 200)]])
+                + `<div class="cad-field-row"><div class="cad-field">
+                    <label class="cad-label">回転 (Rotation)</label>
+                    <select class="cad-input cad-select" id="cadRotation">
+                        <option value="0" ${v("rotation", 0) == 0 ? "selected" : ""}>0°</option>
+                        <option value="90" ${v("rotation", 0) == 90 ? "selected" : ""}>90°</option>
+                        <option value="180" ${v("rotation", 0) == 180 ? "selected" : ""}>180°</option>
+                        <option value="270" ${v("rotation", 0) == 270 ? "selected" : ""}>270°</option>
+                    </select>
+                </div></div>`;
         } else {
             typeFields = fieldRow([["下半径", "cadBottomRadius", v("bottomRadius", 100)], ["上半径", "cadTopRadius", v("topRadius", "")]])
-              + fieldRow([["高さ (Tall)", "cadTall", v("tall", 100)]]);
+                + fieldRow([["高さ (Tall)", "cadTall", v("tall", 100)]]);
         }
 
         this._el.innerHTML = `

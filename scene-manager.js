@@ -63,17 +63,6 @@ export class SceneManager {
         mesh.add(edges);
     }
 
-    _disposeMesh(mesh) {
-        // Dispose edge children first
-        for (const child of [...mesh.children]) {
-            if (child.geometry) child.geometry.dispose();
-            if (child.material) child.material.dispose();
-            mesh.remove(child);
-        }
-        mesh.geometry.dispose();
-        mesh.material.dispose();
-    }
-
     _createFloorMesh(data) {
         const s = this.settings.scale;
         const tall = data.tall ?? this.settings.floorTall;
@@ -183,18 +172,263 @@ export class SceneManager {
             data.z * s,
             data.y * s,
         );
+        const rot = data.rotation ?? 0;
+        if (rot !== 0) {
+            mesh.rotation.y = -rot * Math.PI / 180;
+        }
         this._addEdges(mesh, 1);
         this.threeScene.add(mesh);
         return mesh;
     }
 
+    _rectIntersection(a, b) {
+        const x1 = Math.max(a.x, b.x);
+        const y1 = Math.max(a.y, b.y);
+        const x2 = Math.min(a.x + a.width, b.x + b.width);
+        const y2 = Math.min(a.y + a.height, b.y + b.height);
+
+        if (x2 <= x1 || y2 <= y1) return null;
+
+        return {
+            x: x1,
+            y: y1,
+            width: x2 - x1,
+            height: y2 - y1,
+        };
+    }
+
+    _subtractRect(base, cut) {
+        const out = [];
+
+        const bx1 = base.x;
+        const by1 = base.y;
+        const bx2 = base.x + base.width;
+        const by2 = base.y + base.height;
+
+        const cx1 = cut.x;
+        const cy1 = cut.y;
+        const cx2 = cut.x + cut.width;
+        const cy2 = cut.y + cut.height;
+
+        if (cy1 > by1) {
+            out.push({
+                x: bx1,
+                y: by1,
+                width: base.width,
+                height: cy1 - by1,
+            });
+        }
+
+        if (cy2 < by2) {
+            out.push({
+                x: bx1,
+                y: cy2,
+                width: base.width,
+                height: by2 - cy2,
+            });
+        }
+
+        const midY1 = Math.max(by1, cy1);
+        const midY2 = Math.min(by2, cy2);
+
+        if (cx1 > bx1 && midY2 > midY1) {
+            out.push({
+                x: bx1,
+                y: midY1,
+                width: cx1 - bx1,
+                height: midY2 - midY1,
+            });
+        }
+
+        if (cx2 < bx2 && midY2 > midY1) {
+            out.push({
+                x: cx2,
+                y: midY1,
+                width: bx2 - cx2,
+                height: midY2 - midY1,
+            });
+        }
+
+        return out.filter(r => r.width > 0 && r.height > 0);
+    }
+
+    _splitByCuts(base, cuts) {
+        let rects = [base];
+
+        for (const cut of cuts) {
+            const next = [];
+
+            for (const rect of rects) {
+                const hit = this._rectIntersection(rect, cut);
+
+                if (!hit) {
+                    next.push(rect);
+                    continue;
+                }
+
+                next.push(...this._subtractRect(rect, hit));
+            }
+
+            rects = next;
+        }
+
+        return rects;
+    }
+
+    _buildFloorGroup(data, rects) {
+        const group = new THREE.Group();
+
+        const s = this.settings.scale;
+        const tall = data.tall ?? this.settings.floorTall;
+        const color = this._resolveColor(data.color);
+
+        for (const rect of rects) {
+            const mesh = new THREE.Mesh(
+                new THREE.BoxGeometry(
+                    rect.width * s,
+                    tall * s,
+                    rect.height * s,
+                ),
+                new THREE.MeshBasicMaterial({ color }),
+            );
+
+            mesh.position.set(
+                (rect.x + rect.width / 2) * s,
+                (data.z + tall / 2) * s,
+                (rect.y + rect.height / 2) * s,
+            );
+
+            group.add(mesh);
+
+            const yTop = (data.z + tall) * s + 0.0001;
+
+            const x1 = rect.x * s;
+            const z1 = rect.y * s;
+            const x2 = (rect.x + rect.width) * s;
+            const z2 = (rect.y + rect.height) * s;
+
+            const ox1 = data.x;
+            const oy1 = data.y;
+            const ox2 = data.x + data.width;
+            const oy2 = data.y + data.height;
+
+            const points = [];
+
+            if (rect.y === oy1) {
+                points.push(x1, yTop, z1, x2, yTop, z1);
+            }
+
+            if (rect.y + rect.height === oy2) {
+                points.push(x2, yTop, z2, x1, yTop, z2);
+            }
+
+            if (rect.x === ox1) {
+                points.push(x1, yTop, z2, x1, yTop, z1);
+            }
+
+            if (rect.x + rect.width === ox2) {
+                points.push(x2, yTop, z1, x2, yTop, z2);
+            }
+
+            if (points.length > 0) {
+                const geo = new THREE.BufferGeometry();
+                geo.setAttribute(
+                    "position",
+                    new THREE.Float32BufferAttribute(points, 3),
+                );
+
+                const lines = new THREE.LineSegments(
+                    geo,
+                    new THREE.LineBasicMaterial({
+                        color: 0x222222,
+                    }),
+                );
+
+                group.add(lines);
+            }
+        }
+
+        this.threeScene.add(group);
+        return group;
+    }
+
+    _disposeMesh(mesh) {
+        mesh.traverse((obj) => {
+            if (obj.geometry) {
+                obj.geometry.dispose();
+            }
+
+            if (obj.material) {
+                if (Array.isArray(obj.material)) {
+                    for (const m of obj.material) {
+                        m.dispose();
+                    }
+                } else {
+                    obj.material.dispose();
+                }
+            }
+        });
+    }
+
+    _rebuildFloors() {
+        for (const entry of this._entries) {
+            if (!entry || entry.data.type !== "floor") continue;
+
+            this.threeScene.remove(entry.mesh);
+
+            if (entry.mesh) {
+                this._disposeMesh(entry.mesh);
+            }
+        }
+
+        for (let i = 0; i < this._entries.length; i++) {
+            const entry = this._entries[i];
+
+            if (!entry || entry.data.type !== "floor") continue;
+
+            const data = entry.data;
+
+            const cuts = [];
+
+            for (let j = i + 1; j < this._entries.length; j++) {
+                const other = this._entries[j];
+
+                if (!other || other.data.type !== "floor") continue;
+
+                const aTall = data.tall ?? this.settings.floorTall;
+                const bTall = other.data.tall ?? this.settings.floorTall;
+
+                if (data.z !== other.data.z) continue;
+                if (aTall !== bTall) continue;
+                if (data.color === other.data.color) continue;
+
+                const hit = this._rectIntersection(data, other.data);
+
+                if (hit) {
+                    cuts.push(hit);
+                }
+            }
+
+            const rects = this._splitByCuts(data, cuts);
+
+            entry.mesh = this._buildFloorGroup(data, rects);
+        }
+    }
+
     addFloor(x, y, z, width, height, color, tall) {
         const data = { type: "floor", x, y, z, width, height, color };
+
         if (tall !== undefined) {
             data.tall = tall;
         }
-        const mesh = this._createFloorMesh(data);
-        this._entries.push({ data, mesh });
+
+        this._entries.push({
+            data,
+            mesh: null,
+        });
+
+        this._rebuildFloors();
+
         return this._entries.length - 1;
     }
 
@@ -208,8 +442,11 @@ export class SceneManager {
         return this._entries.length - 1;
     }
 
-    addSlope(x, y, z, width, height, tall, color) {
+    addSlope(x, y, z, width, height, tall, color, rotation) {
         const data = { type: "slope", x, y, z, width, height, tall, color };
+        if (rotation !== undefined) {
+            data.rotation = rotation;
+        }
         const mesh = this._createSlopeMesh(data);
         this._entries.push({ data, mesh });
         return this._entries.length - 1;
@@ -217,12 +454,29 @@ export class SceneManager {
 
     remove(index) {
         if (index < 0 || index >= this._entries.length) return false;
+
         const entry = this._entries[index];
         if (!entry) return false;
 
+        if (entry.data.type === "floor") {
+            this.threeScene.remove(entry.mesh);
+
+            if (entry.mesh) {
+                this._disposeMesh(entry.mesh);
+            }
+
+            this._entries[index] = null;
+
+            this._rebuildFloors();
+
+            return true;
+        }
+
         this.threeScene.remove(entry.mesh);
         this._disposeMesh(entry.mesh);
+
         this._entries[index] = null;
+
         return true;
     }
 
@@ -231,14 +485,20 @@ export class SceneManager {
         const entry = this._entries[index];
         if (!entry) return;
 
+        if (entry.data.type === "floor") {
+            Object.assign(entry.data, partialData);
+
+            this._rebuildFloors();
+
+            return;
+        }
+
         this.threeScene.remove(entry.mesh);
         this._disposeMesh(entry.mesh);
 
         Object.assign(entry.data, partialData);
 
-        if (entry.data.type === "floor") {
-            entry.mesh = this._createFloorMesh(entry.data);
-        } else if (entry.data.type === "slope") {
+        if (entry.data.type === "slope") {
             entry.mesh = this._createSlopeMesh(entry.data);
         } else {
             entry.mesh = this._createObjectMesh(entry.data);
@@ -263,7 +523,7 @@ export class SceneManager {
             return this.addFloor(data.x, data.y, data.z, data.width, data.height, data.color, data.tall);
         }
         if (data.type === "slope") {
-            return this.addSlope(data.x, data.y, data.z, data.width, data.height, data.tall, data.color);
+            return this.addSlope(data.x, data.y, data.z, data.width, data.height, data.tall, data.color, data.rotation);
         }
         return this.addObject(data.x, data.y, data.z, data.bottomRadius, data.tall, data.color, data.topRadius);
     }
@@ -332,6 +592,7 @@ export class SceneManager {
                     obj.height,
                     obj.tall,
                     obj.color,
+                    obj.rotation,
                 );
             } else if (obj.type === "object") {
                 this.addObject(

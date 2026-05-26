@@ -9,16 +9,16 @@ export const DEFAULT_SETTINGS = {
 
 // floor (ボックス): { type, x, y, z, width, height, color, tall? }
 // object (シリンダー): { type, x, y, z, bottomRadius, tall, color, topRadius? }
-// slope (スロープ): { type, x, y, z, width, height, tall, color }
+// slope (スロープ): { type, x, y, z, width, height, tall, color, rotation? }
 export const objects = [
     // フィールド床
     { type: "floor", x: 0, y: 0, z: 0, width: 10800, height: 11700, color: "field" },
 
     // ロンリ
-    { type: "floor", x: 150, y: 150, z: 20, width: 1500, height: 1500, color: "red" },
-    { type: "floor", x: 9150, y: 150, z: 20, width: 1500, height: 1500, color: "blue" },
-    { type: "floor", x: 150, y: 3000, z: 20, width: 5000, height: 2400, color: "gray" },
-    { type: "floor", x: 5650, y: 3000, z: 20, width: 5000, height: 2400, color: "gray" },
+    { type: "floor", x: 150, y: 150, z: 0, width: 1500, height: 1500, color: "red" },
+    { type: "floor", x: 9150, y: 150, z: 0, width: 1500, height: 1500, color: "blue" },
+    { type: "floor", x: 150, y: 3000, z: 0, width: 5000, height: 2400, color: "gray" },
+    { type: "floor", x: 5650, y: 3000, z: 0, width: 5000, height: 2400, color: "gray" },
 
     // さく（赤側）
     { type: "floor", x: 0, y: 0, z: 0, width: 5300, height: 150, color: "red", tall: 150 },
