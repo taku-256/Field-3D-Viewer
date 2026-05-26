@@ -6,12 +6,11 @@ import { ShareDialog } from "./share-dialog.js";
 import { encodeSceneToHash } from "./scene-serializer.js";
 
 window.addEventListener("DOMContentLoaded", () => {
-    // Confirm dialog when clicking the header link
+    // Confirm dialog when clicking the header link (only on desktop viewports)
     const headerLink = document.getElementById("headerLink");
     if (headerLink) {
         headerLink.addEventListener("click", (e) => {
-            const isMobile = window.matchMedia("(max-width: 768px)").matches;
-            if (isMobile) {
+            if (window.matchMedia("(max-width: 768px)").matches) {
                 e.preventDefault();
                 return;
             }
