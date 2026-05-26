@@ -382,28 +382,34 @@ export class SceneManager {
             }
         }
 
-        for (let i = 0; i < this._entries.length; i++) {
-            const entry = this._entries[i];
-
+        for (const entry of this._entries) {
             if (!entry || entry.data.type !== "floor") continue;
 
             const data = entry.data;
 
             const cuts = [];
 
-            for (let j = i + 1; j < this._entries.length; j++) {
-                const other = this._entries[j];
+            const areaA = data.width * data.height;
+            const tallA = data.tall ?? this.settings.floorTall;
 
-                if (!other || other.data.type !== "floor") continue;
+            for (const other of this._entries) {
+                if (!other || other === entry) continue;
+                if (other.data.type !== "floor") continue;
 
-                const aTall = data.tall ?? this.settings.floorTall;
-                const bTall = other.data.tall ?? this.settings.floorTall;
+                const otherData = other.data;
 
-                if (data.z !== other.data.z) continue;
-                if (aTall !== bTall) continue;
-                if (data.color === other.data.color) continue;
+                const tallB = otherData.tall ?? this.settings.floorTall;
 
-                const hit = this._rectIntersection(data, other.data);
+                if (data.z !== otherData.z) continue;
+                if (tallA !== tallB) continue;
+                if (data.color === otherData.color) continue;
+
+                const areaB = otherData.width * otherData.height;
+
+                // 小さい floor のみが大きい floor を切り抜く
+                if (areaB >= areaA) continue;
+
+                const hit = this._rectIntersection(data, otherData);
 
                 if (hit) {
                     cuts.push(hit);
