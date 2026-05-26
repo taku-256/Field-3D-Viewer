@@ -80,7 +80,7 @@ export class SceneManager {
         mesh.position.set(
             (data.x + data.width / 2) * s,
             (data.z + tall / 2) * s,
-            (data.y + data.height / 2) * s,
+            -(data.y + data.height / 2) * s,
         );
         this._addEdges(mesh);
         this.threeScene.add(mesh);
@@ -103,7 +103,7 @@ export class SceneManager {
         mesh.position.set(
             data.x * s,
             (data.z + data.tall / 2) * s,
-            data.y * s,
+            -data.y * s,
         );
         this._addEdges(mesh);
         this.threeScene.add(mesh);
@@ -171,7 +171,7 @@ export class SceneManager {
         mesh.position.set(
             data.x * s,
             data.z * s,
-            data.y * s,
+            -data.y * s,
         );
         const rot = data.rotation ?? 0;
         if (rot !== 0) {
@@ -296,7 +296,7 @@ export class SceneManager {
             mesh.position.set(
                 (rect.x + rect.width / 2) * s,
                 (data.z + tall / 2) * s,
-                (rect.y + rect.height / 2) * s,
+                -(rect.y + rect.height / 2) * s,
             );
 
             group.add(mesh);
@@ -304,9 +304,9 @@ export class SceneManager {
             const yTop = (data.z + tall) * s + 0.0001;
 
             const x1 = rect.x * s;
-            const z1 = rect.y * s;
+            const z1 = -rect.y * s;
             const x2 = (rect.x + rect.width) * s;
-            const z2 = (rect.y + rect.height) * s;
+            const z2 = -(rect.y + rect.height) * s;
 
             const ox1 = data.x;
             const oy1 = data.y;
