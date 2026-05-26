@@ -1,59 +1,69 @@
 <!doctype html>
-<html>
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-        <!-- import three.js (importmap) -->
-        <script type="importmap">
-            {
-                "imports": {
-                    "three": "https://cdn.jsdelivr.net/npm/three@0.182.0/build/three.module.js",
-                    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.182.0/examples/jsm/",
-                    "pako": "https://cdn.jsdelivr.net/npm/pako@2.1.0/+esm"
-                }
-            }
-        </script>
-        <link rel="stylesheet" href="style.css" />
-        <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-        <script type="module" src="main.js"></script>
-    </head>
+<html lang="ja">
 
-    <body>
-        <h1 style="position: absolute;left: 10px">Field 3D Viewer</h1>
-        <canvas id="myCanvas" style="position:absolute;top:100px"></canvas>
-        <canvas
-            id="rotor"
-            style="
-                position: absolute;
-                top: 100px;
-                right: 0;
-                padding: 0px;
-                margin: 0px;
-            "
-        ></canvas>
-        <a style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);">&copy; 2026 taku-256</a>
-        <div
-            id="cameraOrientation"
-            style="
-                text-align: center;
-                color: whitesmoke;
-                font-family: Arial, sans-serif;
-                position: absolute;
-                right: 10px;
-                bottom: 60px;
-            "
-        ></div>
-        <div
-            id="odom"
-            style="
-                text-align: center;
-                color: whitesmoke;
-                font-family: Arial, sans-serif;
-                position: absolute;
-                right: 10px;
-                bottom: 80px;
-            "
-        ></div>
+<head>
+    <meta charset="UTF-8" />
+
+    <!-- viewport: zoom制御を明示 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+    <title>Field 3D Viewer</title>
+
+    <meta name="description" content="ブラウザ上で動作する3Dロボットフィールドビジュアライザ。CAD的にオブジェクトを配置し、URL共有・QR共有が可能。" />
+    <meta name="keywords" content="3D, viewer, CAD, robotics, three.js, field, simulator" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Field 3D Viewer" />
+    <meta property="og:description" content="3Dフィールドをブラウザで構築・共有できるツール" />
+    <meta property="og:site_name" content="Field 3D Viewer" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Field 3D Viewer" />
+    <meta name="twitter:description" content="3Dフィールドをブラウザで構築・共有できるツール" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+
+    <!-- importmap -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.182.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.182.0/examples/jsm/",
+            "pako": "https://cdn.jsdelivr.net/npm/pako@2.1.0/+esm"
+        }
+    }
+    </script>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="style.css" />
+
+    <!-- QR -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+
+    <!-- App -->
+    <script type="module" src="main.js"></script>
+
+    <!-- mobile behavior hint -->
+    <meta name="format-detection" content="telephone=no" />
+</head>
+
+<body>
+    <header>
+        <h1>Field 3D Viewer</h1>
+    </header>
+
+    <main>
+        <canvas id="myCanvas"></canvas>
+        <canvas id="rotor"></canvas>
+
+        <div id="cameraOrientation"></div>
+        <div id="odom"></div>
+
         <input class="checkbox" type="checkbox" name="open_close_button" id="open_close_button" />
         <div class="CADopenButton">
             <label for="open_close_button" class="toggleLabel">
@@ -65,5 +75,11 @@
             <div class="panelContent">
             </div>
         </div>
-    </body>
+    </main>
+
+    <footer>
+        <a href="https://github.com/taku-256" target="_blank" rel="noopener noreferrer">&copy; 2026 taku-256</a>
+    </footer>
+</body>
+
 </html>
