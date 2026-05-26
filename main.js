@@ -23,9 +23,65 @@ window.addEventListener("DOMContentLoaded", () => {
     let look_x = initial_look_x;
     let look_y = initial_look_y;
     let distance = initial_distance;
+    let targetDistance = distance;
+    const minDistance = 1;
+    const maxDistance = 10000;
 
     const cadPanel = new CadPanel(sceneManager);
     const shareDialog = new ShareDialog(sceneManager);
+
+    // Create and append floating zoom buttons
+    const zoomContainer = document.createElement("div");
+    zoomContainer.className = "zoom-btn-container";
+    
+    const zoomInBtn = document.createElement("button");
+    zoomInBtn.className = "zoom-btn zoom-in";
+    zoomInBtn.innerHTML = "+";
+    zoomInBtn.setAttribute("aria-label", "Zoom In");
+    
+    const zoomOutBtn = document.createElement("button");
+    zoomOutBtn.className = "zoom-btn zoom-out";
+    zoomOutBtn.innerHTML = "−";
+    zoomOutBtn.setAttribute("aria-label", "Zoom Out");
+    
+    zoomContainer.appendChild(zoomInBtn);
+    zoomContainer.appendChild(zoomOutBtn);
+    document.body.appendChild(zoomContainer);
+
+    let zoomInterval = null;
+    let zoomTimeout = null;
+
+    function startZoom(direction) {
+        const step = direction === "in" ? 0.8 : 1.25;
+        targetDistance = Math.min(Math.max(targetDistance * step, minDistance), maxDistance);
+
+        zoomTimeout = setTimeout(() => {
+            zoomInterval = setInterval(() => {
+                const contStep = direction === "in" ? 0.95 : 1.05;
+                targetDistance = Math.min(Math.max(targetDistance * contStep, minDistance), maxDistance);
+            }, 30);
+        }, 250);
+    }
+
+    function stopZoom() {
+        clearTimeout(zoomTimeout);
+        clearInterval(zoomInterval);
+    }
+
+    zoomInBtn.addEventListener("pointerdown", (e) => {
+        e.preventDefault();
+        startZoom("in");
+    });
+    zoomOutBtn.addEventListener("pointerdown", (e) => {
+        e.preventDefault();
+        startZoom("out");
+    });
+
+    const stopEvents = ["pointerup", "pointerleave", "pointercancel"];
+    stopEvents.forEach(evt => {
+        zoomInBtn.addEventListener(evt, stopZoom);
+        zoomOutBtn.addEventListener(evt, stopZoom);
+    });
 
     function updateHash() {
         try {
@@ -52,8 +108,9 @@ window.addEventListener("DOMContentLoaded", () => {
 
         updateOrientation(rotor_camera);
 
+        const isMobile = window.matchMedia("(max-width: 768px)").matches;
         const w = window.innerWidth;
-        const h = window.innerHeight - 150;
+        const h = isMobile ? window.innerHeight : window.innerHeight - 150;
         if (w !== prevW || h !== prevH) {
             prevW = w;
             prevH = h;
@@ -69,6 +126,10 @@ window.addEventListener("DOMContentLoaded", () => {
         const direction = new THREE.Vector3(0, 0, 1);
         direction.applyQuaternion(rotor_camera.quaternion);
         direction.normalize();
+
+        // Smoothly interpolate distance to targetDistance
+        const lerpFactor = 0.15;
+        distance += (targetDistance - distance) * lerpFactor;
 
         camera.position.set(
             look_x + direction.x * distance,
@@ -86,52 +147,114 @@ window.addEventListener("DOMContentLoaded", () => {
     let lastY = 0;
     const sensitivity = 1.0;
 
+    // Track active pointers for multi-touch gestures (pan & zoom)
+    const activePointers = new Map();
+    let initialPinchDistance = 0;
+    let initialZoomDistance = 0;
+    let lastMidX = 0;
+    let lastMidY = 0;
+
     canvas.addEventListener("pointerdown", (e) => {
-        isDragging = true;
-        lastX = e.clientX;
-        lastY = e.clientY;
+        canvas.setPointerCapture(e.pointerId);
+        activePointers.set(e.pointerId, e);
+
+        if (activePointers.size === 1) {
+            isDragging = true;
+            lastX = e.clientX;
+            lastY = e.clientY;
+        } else if (activePointers.size === 2) {
+            isDragging = false; // Disable single-finger drag
+            const [p1, p2] = Array.from(activePointers.values());
+            initialPinchDistance = Math.hypot(p1.clientX - p2.clientX, p1.clientY - p2.clientY);
+            initialZoomDistance = targetDistance;
+            lastMidX = (p1.clientX + p2.clientX) / 2;
+            lastMidY = (p1.clientY + p2.clientY) / 2;
+        }
     });
 
     canvas.addEventListener("pointermove", (e) => {
-        if (!isDragging) return;
+        if (!activePointers.has(e.pointerId)) return;
+        activePointers.set(e.pointerId, e);
+
         const euler = new THREE.Euler().setFromQuaternion(
             rotor_camera.quaternion,
             "YXZ",
         );
 
-        const dx = e.clientX - lastX;
-        const dy = e.clientY - lastY;
-        lastX = e.clientX;
-        lastY = e.clientY;
-        look_x -=
-            ((dx * Math.cos(-euler.y) * sensitivity -
-                dy * Math.sin(-euler.y) * sensitivity) *
-                distance) /
-            1500;
-        look_y -=
-            ((dx * Math.sin(-euler.y) * sensitivity +
-                dy * Math.cos(-euler.y) * sensitivity) *
-                distance) /
-            1500;
+        if (activePointers.size === 1 && isDragging) {
+            const dx = e.clientX - lastX;
+            const dy = e.clientY - lastY;
+            lastX = e.clientX;
+            lastY = e.clientY;
+            look_x -=
+                ((dx * Math.cos(-euler.y) * sensitivity -
+                    dy * Math.sin(-euler.y) * sensitivity) *
+                    distance) /
+                1500;
+            look_y -=
+                ((dx * Math.sin(-euler.y) * sensitivity +
+                    dy * Math.cos(-euler.y) * sensitivity) *
+                    distance) /
+                1500;
+        } else if (activePointers.size === 2) {
+            const [p1, p2] = Array.from(activePointers.values());
+
+            // 1. Pinch to zoom
+            const currentDistance = Math.hypot(p1.clientX - p2.clientX, p1.clientY - p2.clientY);
+            if (initialPinchDistance > 10) {
+                const ratio = initialPinchDistance / currentDistance;
+                targetDistance = Math.min(Math.max(initialZoomDistance * ratio, minDistance), maxDistance);
+            }
+
+            // 2. Two-finger translation (panning)
+            const midX = (p1.clientX + p2.clientX) / 2;
+            const midY = (p1.clientY + p2.clientY) / 2;
+            const dx = midX - lastMidX;
+            const dy = midY - lastMidY;
+            lastMidX = midX;
+            lastMidY = midY;
+
+            look_x -=
+                ((dx * Math.cos(-euler.y) * sensitivity -
+                    dy * Math.sin(-euler.y) * sensitivity) *
+                    distance) /
+                1500;
+            look_y -=
+                ((dx * Math.sin(-euler.y) * sensitivity +
+                    dy * Math.cos(-euler.y) * sensitivity) *
+                    distance) /
+                1500;
+        }
     });
 
-    canvas.addEventListener("pointerup", () => {
-        isDragging = false;
-    });
+    const handlePointerUp = (e) => {
+        if (activePointers.has(e.pointerId)) {
+            canvas.releasePointerCapture(e.pointerId);
+            activePointers.delete(e.pointerId);
+        }
 
-    canvas.addEventListener("pointerleave", () => {
-        isDragging = false;
-    });
+        if (activePointers.size === 1) {
+            // Restore single finger drag configuration using the remaining finger
+            const remaining = Array.from(activePointers.values())[0];
+            lastX = remaining.clientX;
+            lastY = remaining.clientY;
+            isDragging = true;
+        } else if (activePointers.size === 0) {
+            isDragging = false;
+        }
+    };
+
+    canvas.addEventListener("pointerup", handlePointerUp);
+    canvas.addEventListener("pointercancel", handlePointerUp);
+    canvas.addEventListener("pointerleave", handlePointerUp);
 
     canvas.addEventListener(
         "wheel",
         (e) => {
             e.preventDefault();
             const zoomSpeed = 0.002;
-            distance *= 1 + e.deltaY * zoomSpeed;
-            const min = 1;
-            const max = 10000;
-            distance = Math.min(Math.max(distance, min), max);
+            targetDistance *= 1 + e.deltaY * zoomSpeed;
+            targetDistance = Math.min(Math.max(targetDistance, minDistance), maxDistance);
         },
         { passive: false },
     );
