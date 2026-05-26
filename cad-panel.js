@@ -197,7 +197,7 @@ export class CadPanel {
             color: "red",
             width: 1000,
             height: 1000,
-            tall: 200,
+            tall: 0,
             bottomRadius: 100
         };
 
@@ -272,7 +272,7 @@ export class CadPanel {
                     <input class="cad-input" type="text" id="cadColorCustom"
                         placeholder="例: 0xff0000 or #ff0000"
                         value="${customVal}" style="flex: 1; margin: 0;">
-                    <input type="color" id="cadColorPicker" value="${pickerVal}" 
+                    <input type="color" id="cadColorPicker" value="${pickerVal}"
                         style="width: 40px; height: 36px; padding: 0; border: 1px solid #d0d0de; border-radius: 8px; cursor: pointer; background: none; flex-shrink: 0;">
                 </div>
                 <div class="cad-actions">
