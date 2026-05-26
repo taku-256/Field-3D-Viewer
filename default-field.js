@@ -10,7 +10,7 @@ export const DEFAULT_SETTINGS = {
 // floor (ボックス): { type, x, y, z, width, height, color, tall? }
 // object (シリンダー): { type, x, y, z, bottomRadius, tall, color, topRadius? }
 // slope (スロープ): { type, x, y, z, width, height, tall, color, rotation? }
-export const objects = [
+export const objects = [/*
     // フィールド床
     { type: "floor", x: 0, y: 0, z: 0, width: 10800, height: 11700, color: "field" },
 
@@ -46,7 +46,7 @@ export const objects = [
     // スポット（青側）
     { type: "object", x: 8150, y: 8300, z: 50, bottomRadius: 400, tall: 50, color: "blue" },
     { type: "object", x: 8150, y: 8300, z: 0, bottomRadius: 800, tall: 50, color: "blue_light" },
-    { type: "object", x: 8150, y: 8300, z: 5, bottomRadius: 1700, tall: 0, color: "blue_mid" },
+    { type: "object", x: 8150, y: 8300, z: 5, bottomRadius: 1700, tall: 0, color: "blue_mid" },*/
 ];
 
 // export const objects = [];
