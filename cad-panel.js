@@ -4,6 +4,13 @@ const BACK_SVG = `<svg width="22" height="22" viewBox="0 0 22 22" fill="none">
     <path d="M14 4L7 11L14 18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>`;
 
+const DROPPER_SVG = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m2 22 1-1c1.2-1.2 1.2-3.1 0-4.2L15 5 19 9 7 21c-1.1 1.1-3 1.1-4.2 0Z"/>
+    <path d="M15 5c.4-.4 1-.4 1.4 0l2.6 2.6c.4.4.4 1 0 1.4L15 5Z"/>
+    <path d="M19 9 15 5"/>
+    <path d="m5 17 2 2"/>
+</svg>`;
+
 function fieldRow(fields) {
     const cells = fields
         .map(([label, id, val]) =>
@@ -206,6 +213,7 @@ export class CadPanel {
 
         const isCustom = data && typeof data.color === "number";
         const customVal = isCustom ? "0x" + data.color.toString(16).padStart(6, "0") : "";
+        const pickerVal = isCustom ? "#" + data.color.toString(16).padStart(6, "0") : "#ffffff";
 
         let typeFields;
         if (type === "floor") {
@@ -245,9 +253,13 @@ export class CadPanel {
                 ${typeFields}
                 <label class="cad-label">色</label>
                 <select class="cad-input cad-select" id="cadColor">${colorOpts}</select>
-                <input class="cad-input cad-color-custom" type="text" id="cadColorCustom"
-                    placeholder="例: 0xff0000 or #ff0000"
-                    value="${customVal}" style="display: ${isCustom ? "block" : "none"}">
+                <div id="cadColorCustomContainer" style="display: ${isCustom ? "flex" : "none"}; gap: 8px; margin-top: 6px;">
+                    <input class="cad-input" type="text" id="cadColorCustom"
+                        placeholder="例: 0xff0000 or #ff0000"
+                        value="${customVal}" style="flex: 1; margin: 0;">
+                    <input type="color" id="cadColorPicker" value="${pickerVal}" 
+                        style="width: 40px; height: 36px; padding: 0; border: 1px solid #d0d0de; border-radius: 8px; cursor: pointer; background: none; flex-shrink: 0;">
+                </div>
                 <div class="cad-actions">
                     <button class="cad-save-btn" id="cadSaveBtn">${isNew ? "追加" : "保存"}</button>
                 </div>
@@ -283,9 +295,44 @@ export class CadPanel {
             }));
 
         const colorSel = this._el.querySelector("#cadColor");
+        const colorCustomContainer = this._el.querySelector("#cadColorCustomContainer");
         const colorCustom = this._el.querySelector("#cadColorCustom");
+        const colorPicker = this._el.querySelector("#cadColorPicker");
+
         colorSel.addEventListener("change", () => {
-            colorCustom.style.display = colorSel.value === "__custom" ? "block" : "none";
+            if (colorSel.value === "__custom") {
+                colorCustomContainer.style.display = "flex";
+                if (!colorCustom.value) {
+                    colorCustom.value = "0xffffff";
+                    colorPicker.value = "#ffffff";
+                }
+            } else {
+                colorCustomContainer.style.display = "none";
+            }
+        });
+
+        // Sync text input edits back to the color picker
+        colorCustom.addEventListener("input", () => {
+            const raw = colorCustom.value.trim();
+            let hex = "";
+            if (raw.startsWith("#") && raw.length === 7) {
+                hex = raw;
+            } else if (raw.startsWith("0x") && raw.length === 8) {
+                hex = "#" + raw.slice(2);
+            } else if (raw.length === 6 && !isNaN(parseInt(raw, 16))) {
+                hex = "#" + raw;
+            }
+            if (hex && /^#[0-9a-fA-F]{6}$/.test(hex)) {
+                colorPicker.value = hex;
+            }
+        });
+
+        // Sync color picker (including eyedropper tool) changes to text input
+        colorPicker.addEventListener("input", () => {
+            const hex = colorPicker.value; // format: '#ffffff'
+            colorCustom.value = "0x" + hex.slice(1);
+            // Dispatch input event to trigger livePreview
+            colorCustom.dispatchEvent(new Event("input"));
         });
 
         this._el.querySelector("#cadSaveBtn").addEventListener("click", () => this._save());
