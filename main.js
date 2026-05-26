@@ -10,6 +10,11 @@ window.addEventListener("DOMContentLoaded", () => {
     const headerLink = document.getElementById("headerLink");
     if (headerLink) {
         headerLink.addEventListener("click", (e) => {
+            const isMobile = window.matchMedia("(max-width: 768px)").matches;
+            if (isMobile) {
+                e.preventDefault();
+                return;
+            }
             const confirmed = confirm("ページを移動すると、編集中のフィールドのデータは失われます。移動してもよろしいですか？");
             if (!confirmed) {
                 e.preventDefault();
