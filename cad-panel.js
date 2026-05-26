@@ -30,6 +30,7 @@ export class CadPanel {
         this._blinkObject = null;
         this._blinkTime = 0;
         this._previewIdx = null;
+        this._lastData = null;
 
         this._el = document.querySelector("#cadPanel .panelContent");
         this.showList();
@@ -187,8 +188,22 @@ export class CadPanel {
 
     showAdd() {
         this._editIdx = "new";
-        this._editType = "floor";
-        this._renderForm(null);
+        const base = this._lastData;
+        const initial = base ?? {
+            type: this._editType,
+            x: 0,
+            y: 0,
+            z: 0,
+            color: "red",
+            width: 1000,
+            height: 1000,
+            tall: 200,
+            bottomRadius: 100
+        };
+
+        this._editType = initial.type;
+
+        this._renderForm(initial);
         this._syncPreview();
     }
 
@@ -343,6 +358,7 @@ export class CadPanel {
 
     _save() {
         const data = this._readAll();
+        this._lastData = data;
         if (this._editIdx === "new") {
             this._stopBlink();
             if (this._previewIdx !== null) {
